@@ -26,23 +26,23 @@ const Chatbot: React.FC = () => {
       className="flex justify-center items-center min-h-screen bg-fixed bg-center bg-cover px-16"
       style={{ backgroundImage: "url('/chatbot-bg.jpg')" }} // Background should match the chatbot page
     >
-      <div className="relative flex items-center space-x-6 max-w-4xl w-full ml-[-50px]">
+      <div className="relative flex items-center space-x-6 max-w-4xl w-full">
         
         {/* Historian Character */}
-        <img src="/historian.png" alt="Historian" className="w-[450px] h-auto ml-[-50px]" />
+        <img src="/historian.png" alt="Historian" className="w-[450px] h-auto ml-[-180px]" />
 
-        {/* Chat Window (Transparent & Bigger) */}
-        <div className="relative p-8 rounded-lg shadow-lg w-[600px] min-w-[200px] border ml-[-50px] border-black bg-opacity-20 backdrop-blur-lg">
+        {/* Chat Window (Transparent & Modernized) */}
+        <div className="relative p-6 rounded-lg shadow-lg w-[600px] min-w-[700px] h-[480px] border border-black bg-opacity-30 backdrop-blur-md flex flex-col">
           
           {/* Messages */}
-          <div className="flex flex-col space-y-4 min-h-[300px] max-h-[400px] overflow-y-auto p-4 scrollbar-hide">
+          <div className="flex flex-col space-y-3 min-h-[350px] max-h-[350px] overflow-y-auto p-4 scrollbar-hide">
             {messages.map((msg, index) => (
               <div
                 key={index}
-                className={`p-3 max-w-[75%] rounded-lg ${
+                className={`p-3 max-w-[75%] rounded-lg text-lg ${
                   msg.sender === "bot"
-                    ? "bg-[#5C3A1D] text-white self-start"
-                    : "bg-white text-black self-end"
+                    ? "bg-[#5C3A1D] text-white self-start shadow-md"
+                    : "bg-white text-black self-end shadow-md"
                 }`}
               >
                 {msg.text}
@@ -51,16 +51,16 @@ const Chatbot: React.FC = () => {
           </div>
 
           {/* Input Field */}
-          <div className="flex mt-4 items-center">
+          <div className="flex mt-2 items-center">
             <input
               type="text"
               value={input}
               onChange={(e: ChangeEvent<HTMLInputElement>) => setInput(e.target.value)}
               onKeyDown={(e: KeyboardEvent<HTMLInputElement>) => e.key === "Enter" && sendMessage()} // ✅ Send message on Enter
-              className="flex-grow p-2 border border-black rounded-l-lg focus:outline-none text-black placeholder-black mr-2"
+              className="flex-grow p-3 border border-black rounded-l-lg focus:outline-none text-black placeholder-black mr-2 bg-white"
               placeholder="Ask Anything..."
             />
-            <button onClick={sendMessage} className="bg-[#5C3A1D] text-white px-4 rounded-r-lg">
+            <button onClick={sendMessage} className="bg-[#5C3A1D] text-white px-5 py-3 rounded-r-lg shadow-md hover:bg-[#4a2c17] transition duration-200">
               ➤
             </button>
           </div>

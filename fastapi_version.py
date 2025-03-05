@@ -2,7 +2,7 @@ from fastapi import FastAPI, HTTPException
 import google.generativeai as genai
 
 # Configure Gemini API
-GEMINI_API_KEY = "AIzaSyC98W8sgyUcu8v2raMd8PiFKtz10gyv01E"
+GEMINI_API_KEY = "YOUR_API_KEY"
 genai.configure(api_key=GEMINI_API_KEY)
 
 app = FastAPI(title="Historical Events Finder API",

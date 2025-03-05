@@ -37,3 +37,36 @@
   background-size: 100% 100%;
   opacity: 0.4;
 }
+
+/* Theme Variables */
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+  --font-sans: sans-serif;
+  --font-mono: monospace;
+}
+
+/* Dark Mode */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+/* Apply Background and Text Color */
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: "Jacques Francois", serif;
+  background-color: #000;
+}
+
+/* Hide scrollbar but allow scrolling */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none; /* Hide scrollbar for Chrome, Safari, and Edge */
+}
+.scrollbar-hide {
+  -ms-overflow-style: none; /* Hide scrollbar for IE and Edge */
+  scrollbar-width: none; /* Hide scrollbar for Firefox */
+}

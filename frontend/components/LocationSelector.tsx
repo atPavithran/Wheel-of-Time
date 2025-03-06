@@ -50,15 +50,23 @@ const countries: string[] = [
 
 interface LocationSelectorProps {
   onSelect: (location: string) => void;
+  selectedLocation?: string; // Add this new prop to receive the selected location from parent
 }
 
-export default function LocationSelector({ onSelect }: LocationSelectorProps) {
+export default function LocationSelector({ onSelect, selectedLocation = "" }: LocationSelectorProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [inputValue, setInputValue] = useState("");
+  const [inputValue, setInputValue] = useState(selectedLocation || "");
   const [dropdownAbove, setDropdownAbove] = useState(false);
 
   const dropdownRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Update input value when selectedLocation prop changes
+  useEffect(() => {
+    if (selectedLocation) {
+      setInputValue(selectedLocation);
+    }
+  }, [selectedLocation]);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -94,6 +102,10 @@ export default function LocationSelector({ onSelect }: LocationSelectorProps) {
     inputRef.current?.select();
   };
 
+  const handleImageClick = () => {
+    setIsOpen(true);
+  };
+
   const filteredCountries = inputValue
     ? countries.filter((country) =>
         country.toLowerCase().includes(inputValue.toLowerCase())
@@ -102,16 +114,16 @@ export default function LocationSelector({ onSelect }: LocationSelectorProps) {
 
   return (
     <div className="relative w-full max-w-[150]" ref={dropdownRef}>
-      <div className="flex items-center">
-        <span className="mr-2 text-2xl">🌍</span>
+      <div className="flex flex-col items-center" onClick={handleImageClick}>
+        <img src="/globe.png" alt="Globe" className="w-110 h-110 cursor-pointer" />
         <input
           ref={inputRef}
           type="text"
-          value={inputValue}
+          value={inputValue.toUpperCase()}
           onChange={handleInputChange}
           onClick={handleInputClick}
-          placeholder="Location"
-          className="w-full text-xl text-[#3d2b1f] bg-transparent outline-none placeholder-[#3d2b1f]"
+          placeholder="LOCATION"
+          className="w-full text-xl text-[#3d2b1f] mb-6 mt-[-10%] font-semibold bg-transparent outline-none placeholder-[#3d2b1f] text-center"
         />
       </div>
 

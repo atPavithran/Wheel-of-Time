@@ -1,9 +1,6 @@
-"use client";
-
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import themes from "@/data/themes";
-import { Button } from "@/components/ui";
 
 interface ThemeSelectorProps {
   onSelect: (theme: string) => void;
@@ -21,20 +18,28 @@ export default function ThemeSelector({ onSelect }: ThemeSelectorProps) {
   };
 
   const positions = [
-    { left: "-100px", top: "10px" },
-    { left: "-15px", top: "35px" },
-    { left: "70px", top: "80px" },
-    { left: "110px", top: "180px" },
+    { left: "-100px", top: "-20px" },
+    { left: "-15px", top: "5px" },
+    { left: "70px", top: "60px" },
+    { left: "110px", top: "150px" },
   ];
 
   return (
     <div className="relative flex flex-col items-center">
-      <Button
-        className="px-4 py-2 font-semibold bg-[#724e27] rounded-lg shadow-lg"
+      {/* Image as Button */}
+      <img
+        src="/book.jpeg"
+        alt="Theme Button"
+        className="w-20 h-30 mt-5 cursor-pointer object-cover"
         onClick={() => setIsOpen(!isOpen)}
-      >
-        {selectedTheme ? `${selectedTheme}` : "Theme"}
-      </Button>
+      />
+
+      {/* Display selected theme below the image */}
+      {selectedTheme && (
+        <p className="mt-2 text-xl font-semibold text-[#3d2b1f]">
+          {selectedTheme.toUpperCase()}
+        </p>
+      )}
 
       <AnimatePresence>
         {isOpen && (

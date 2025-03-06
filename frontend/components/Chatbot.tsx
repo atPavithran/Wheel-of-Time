@@ -1,4 +1,4 @@
-"use client";
+"user client";
 
 import React, { useState, useEffect, useRef, ChangeEvent, KeyboardEvent } from "react";
 
@@ -92,7 +92,7 @@ const Chatbot: React.FC = () => {
             display: "flex",
             justifyContent: "space-between",
             paddingBottom: "10px",
-          }}
+          }as React.CSSProperties}
         >
 
           {/* Messages Section */}

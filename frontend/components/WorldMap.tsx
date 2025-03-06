@@ -7,14 +7,16 @@ interface Country {
   name: string;
 }
 
-export default function WorldMap() {
+interface WorldMapProps {
+  onSelectCountry: (country: string) => void;
+}
+
+export default function WorldMap({ onSelectCountry }: WorldMapProps) {
   const [selectedCountry, setSelectedCountry] = useState<Country | null>(null);
   const [hoveredCountry, setHoveredCountry] = useState<Country | null>(null);
   const [svgData, setSvgData] = useState<string>("");
   const [countryNames, setCountryNames] = useState<Record<string, string>>({});
   const mapRef = useRef<HTMLDivElement>(null);
-
-  const mapInitialized = useRef(false);
 
   useEffect(() => {
     setCountryNames({
@@ -252,12 +254,7 @@ export default function WorldMap() {
   }, []);
 
   useEffect(() => {
-    if (
-      !svgData ||
-      !mapRef.current ||
-      Object.keys(countryNames).length === 0 ||
-      mapInitialized.current
-    )
+    if (!svgData || !mapRef.current || Object.keys(countryNames).length === 0)
       return;
 
     const parser = new DOMParser();
@@ -271,10 +268,10 @@ export default function WorldMap() {
 
     svgElement.setAttribute("width", "100%");
     svgElement.setAttribute("height", "100%");
-    svgElement.setAttribute("preserveAspectRatio", "xMidYMid meet");
+    svgElement.setAttribute("preserveAspectRatio", "none");
 
     if (!svgElement.hasAttribute("viewBox")) {
-      svgElement.setAttribute("viewBox", "0 0 1000 500");
+      svgElement.setAttribute("viewBox", "0 0 1200 600");
     }
 
     const countries = svgElement.querySelectorAll(".sm_state");
@@ -338,37 +335,34 @@ export default function WorldMap() {
         currentSelectedElement = countryElement;
 
         countryElement.setAttribute("fill", "#b38c4d");
-        setSelectedCountry({
+        const selected = {
           code: countryCode,
           name: countryNames[countryCode] || countryCode,
-        });
+        };
+        setSelectedCountry(selected);
+        onSelectCountry(selected.name); // Pass to parent
       });
     });
 
-    // Mark the map as initialized
-    mapInitialized.current = true;
-
     return () => {
-      // Clean up code
       if (mapRef.current) {
         mapRef.current.innerHTML = "";
       }
     };
-  }, [svgData, countryNames]);
+  }, [svgData, countryNames, onSelectCountry]);
 
   return (
     <div className="relative w-full h-full">
-      {/* <div className="absolute top-4 left-4 z-10 bg-black bg-opacity-70 text-white p-3 rounded-md">
-        {selectedCountry ? (
-          <div className="font-medium">Selected: {selectedCountry.name}</div>
-        ) : hoveredCountry ? (
-          <div>Hovering: {hoveredCountry.name}</div>
-        ) : (
-          <div>Click on a country</div>
-        )}
-      </div> */}
-
-      <div ref={mapRef} className="w-full h-full" />
+      <div
+        ref={mapRef}
+        className="w-full h-full overflow-hidden"
+        style={{ aspectRatio: "2 / 1" }}
+      />
+      {hoveredCountry && (
+        <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black bg-opacity-75 text-white py-2 px-4 rounded-lg">
+          {hoveredCountry.name}
+        </div>
+      )}
     </div>
   );
 }

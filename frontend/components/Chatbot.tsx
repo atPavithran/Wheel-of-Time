@@ -1,4 +1,4 @@
-"user client";
+"use client";
 
 import React, { useState, useEffect, useRef, ChangeEvent, KeyboardEvent } from "react";
 

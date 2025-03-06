@@ -1,6 +1,7 @@
 import React from "react";
 import { Dialog } from "@/components/ui";
 import { X } from "lucide-react";
+import StardustText from "./StardustText";
 
 const eventData = [
   {
@@ -51,7 +52,11 @@ export default function EventsDialog({
         >
           {/* Header */}
           <div className="bg-[#3d2b1f] text-[#e6d2b5] p-4 pl-8 pr-6 flex justify-between items-center">
-            <h2 className="text-3xl font-bold">Historical Events</h2>
+            <h2 className="text-3xl font-bold">
+              <StardustText density={3} color="#FFD700">
+              Historical Events
+              </StardustText>
+              </h2>
             <button
               onClick={() => onOpenChange(false)}
               className="group transition-all duration-300 ease-in-out"

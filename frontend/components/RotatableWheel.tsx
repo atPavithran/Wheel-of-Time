@@ -4,19 +4,20 @@ import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import { motion } from "framer-motion";
 
-const eras = ["Ancient", "Medieval", "Renaissance", "Industrial", "Modern"];
-const DEGREES_PER_ERA = 360 / eras.length; // 360 / 5 = 72° per era
+const YEAR_STEP = 5; // More gradual year change
+const ROTATION_SENSITIVITY = 0.4; // Slow down year changes
 
 interface RotatableWheelProps {
+  onYearChange: (delta: number) => void;
   onRotate: (isRotating: boolean, era?: string) => void;
 }
 
-const RotatableWheel: React.FC<RotatableWheelProps> = ({ onRotate }) => {
+const RotatableWheel: React.FC<RotatableWheelProps> = ({ onYearChange }) => {
   const [rotation, setRotation] = useState(0);
-  const [currentEraIndex, setCurrentEraIndex] = useState(0);
   const wheelRef = useRef<HTMLDivElement>(null);
   const isDragging = useRef(false);
   const lastPosition = useRef({ x: 0, y: 0 });
+  const accumulatedRotation = useRef(0);
 
   useEffect(() => {
     const wheel = wheelRef.current;
@@ -47,21 +48,19 @@ const RotatableWheel: React.FC<RotatableWheelProps> = ({ onRotate }) => {
       let angleDiff = (currentAngle - previousAngle) * (180 / Math.PI);
       setRotation((prev) => (prev + angleDiff) % 360);
       lastPosition.current = { x: e.clientX, y: e.clientY };
+
+      accumulatedRotation.current += angleDiff * ROTATION_SENSITIVITY;
+      if (Math.abs(accumulatedRotation.current) >= 5) {
+        const direction = accumulatedRotation.current > 0 ? 1 : -1;
+        onYearChange(YEAR_STEP * direction);
+        accumulatedRotation.current = 0;
+      }
     };
 
     const handleMouseUp = () => {
       isDragging.current = false;
       document.body.style.userSelect = "";
-
-      // Calculate new era based on rotation
-      const newEraIndex = Math.floor(((rotation + 360) % 360) / DEGREES_PER_ERA);
-
-      if (newEraIndex !== currentEraIndex) {
-        setCurrentEraIndex(newEraIndex);
-        onRotate(true, eras[newEraIndex]); // Only trigger when era changes
-      } else {
-        onRotate(false); // No era change, no blur effect
-      }
+      accumulatedRotation.current = 0;
     };
 
     wheel.addEventListener("mousedown", handleMouseDown);
@@ -73,7 +72,7 @@ const RotatableWheel: React.FC<RotatableWheelProps> = ({ onRotate }) => {
       document.removeEventListener("mousemove", handleMouseMove);
       document.removeEventListener("mouseup", handleMouseUp);
     };
-  }, [rotation, currentEraIndex, onRotate]);
+  }, [rotation, onYearChange]);
 
   return (
     <div

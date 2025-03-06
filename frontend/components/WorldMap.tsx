@@ -14,6 +14,7 @@ interface WorldMapProps {
 export default function WorldMap({ onSelectCountry }: WorldMapProps) {
   const [selectedCountry, setSelectedCountry] = useState<Country | null>(null);
   const [hoveredCountry, setHoveredCountry] = useState<Country | null>(null);
+  const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
   const [svgData, setSvgData] = useState<string>("");
   const [countryNames, setCountryNames] = useState<Record<string, string>>({});
   const mapRef = useRef<HTMLDivElement>(null);
@@ -301,10 +302,19 @@ export default function WorldMap({ onSelectCountry }: WorldMapProps) {
       countryElement.setAttribute("stroke-width", "5");
       countryElement.setAttribute("stroke", "transparent");
 
-      countryElement.addEventListener("mouseenter", () => {
+      countryElement.addEventListener("mouseenter", (e) => {
         if (selectedCountry?.code !== countryCode) {
           countryElement.setAttribute("fill", "#d8b57f");
         }
+        
+        // Get position for tooltip
+        const mouseEvent = e as MouseEvent;
+        const rect = mapRef.current!.getBoundingClientRect();
+        setTooltipPosition({
+          x: mouseEvent.clientX - rect.left,
+          y: mouseEvent.clientY - rect.top - 30 // Offset so tooltip appears above cursor
+        });
+        
         setHoveredCountry({
           code: countryCode,
           name: countryNames[countryCode] || countryCode,
@@ -319,6 +329,17 @@ export default function WorldMap({ onSelectCountry }: WorldMapProps) {
           );
         }
         setHoveredCountry(null);
+      });
+
+      countryElement.addEventListener("mousemove", (e) => {
+        if (hoveredCountry) {
+          const mouseEvent = e as MouseEvent;
+          const rect = mapRef.current!.getBoundingClientRect();
+          setTooltipPosition({
+            x: mouseEvent.clientX - rect.left,
+            y: mouseEvent.clientY - rect.top - 30
+          });
+        }
       });
 
       countryElement.addEventListener("click", () => {
@@ -358,9 +379,42 @@ export default function WorldMap({ onSelectCountry }: WorldMapProps) {
         className="w-full h-full overflow-hidden"
         style={{ aspectRatio: "2 / 1" }}
       />
+      
+      {/* Custom themed tooltip with improved visibility */}
       {hoveredCountry && (
-        <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black bg-opacity-75 text-white py-2 px-4 rounded-lg">
-          {hoveredCountry.name}
+        <div 
+          className="absolute pointer-events-none transform"
+          style={{
+            left: `${tooltipPosition.x}px`,
+            top: `${tooltipPosition.y}px`,
+            transform: 'translate(-50%, -100%)',
+            zIndex: 50
+          }}
+        >
+          <div 
+  className="relative py-2 px-4 min-w-32 text-center rounded-md shadow-md"
+  style={{
+    backgroundImage: "url('/search-background.png')",
+    backgroundSize: "100% 100%",
+    backgroundRepeat: "no-repeat",
+    backdropFilter: "blur(10px)",
+    opacity: 1,
+  }}
+>
+  <span className="text-[#3d2b1f] font-medium text-base">
+    {hoveredCountry.name}
+  </span>
+
+  {/* Triangle pointer */}
+  <div 
+    className="absolute border border-green-600 left-1/2 -bottom-2 w-4 h-4 transform -translate-x-1/2 rotate-45"
+    style={{ 
+      backgroundColor: "#83f28f", // Match background
+      boxShadow: "2px 2px 3px rgba(0,0,0,0.1)",
+    }}
+  ></div>
+</div>
+
         </div>
       )}
     </div>

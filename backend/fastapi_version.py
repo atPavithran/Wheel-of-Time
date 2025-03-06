@@ -1,4 +1,5 @@
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 import google.generativeai as genai
 from dotenv import load_dotenv
 import os
@@ -11,6 +12,14 @@ genai.configure(api_key=GEMINI_API_KEY)
 app = FastAPI(title="Historical Events Finder API",
               description="Fetch historical events using Gemini AI",
               version="1.0.0")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],  # Next.js runs on this port
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 def ask_gemini(question: str) -> str:
     """Fetches response from Google Gemini API."""
@@ -35,7 +44,7 @@ def get_historical_events(place: str, year: str = None):
     response = ask_gemini(prompt)
     return {"place": place, "year": year, "events": response}
 
-@app.get("/chatbot")
+@app.get("/chatbot", tags=["Chatbot respone"])
 async def get_chatbot_response(question: str):
     """API endpoint to fetch history-related responses."""
     prompt = (

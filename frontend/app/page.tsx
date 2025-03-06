@@ -3,7 +3,6 @@
 import { useState, useEffect, useRef } from "react";
 import WorldMap from "@/components/WorldMap";
 import RotatableWheel from "@/components/RotatableWheel";
-import { Button, Select } from "@/components/ui";
 import { motion, AnimatePresence } from "framer-motion";
 import EventsDialog from "@/components/EventsDialog";
 import ThemeSelector from "@/components/ThemeSelector";
@@ -149,6 +148,31 @@ export default function Home() {
       setCurrentEra(era);
     }
   };
+
+  const fetchHistoricalEvents = async () => {
+    try {
+      const response = await fetch(
+        `http://localhost:8000/historical-events?place=${encodeURIComponent(selectedLocation)}&year=${encodeURIComponent(selectedYear ?? '')}&theme=${encodeURIComponent(selectedTheme ?? '')}`
+      );
+  
+      if (!response.ok) {
+        throw new Error("Failed to fetch events");
+      }
+  
+      const data = await response.json();
+      
+      console.log("API Response:", data); // ✅ Debug API response in browser console
+  
+      // Ensure `events` is always an array
+      setEvents(Array.isArray(data.events) ? data.events : []);
+      setIsPopupOpen(true);
+    } catch (error) {
+      console.error("Error fetching historical events:", error);
+      setEvents([]); // Prevent `undefined` crashes
+    }
+  };
+  
+  
 
   const numColumns = 12;
   const columnWidth = 100 / numColumns;

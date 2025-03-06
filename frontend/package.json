@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@next/font": "^14.2.15",
     "@shadcn/ui": "^0.0.4",
     "d3-geo": "^3.1.1",
     "framer-motion": "^12.4.9",

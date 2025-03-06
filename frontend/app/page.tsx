@@ -1,16 +1,22 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import WorldMap from "@/components/WorldMap";
 import RotatableWheel from "@/components/RotatableWheel";
-import { Button, Select, Dialog } from "@/components/ui";
-import Image from "next/image";
+import { Button, Select } from "@/components/ui";
 import { motion, AnimatePresence } from "framer-motion";
+import EventsDialog from "@/components/EventsDialog";
+import ThemeSelector from "@/components/ThemeSelector";
+import YearSelector from "@/components/YearSelector";
+import LocationSelector from "@/components/LocationSelector";
 
 export default function Home() {
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [blurEffect, setBlurEffect] = useState(false);
   const [currentEra, setCurrentEra] = useState("Ancient");
+  const [selectedLocation, setSelectedLocation] = useState("");
+  const [selectedTheme, setSelectedTheme] = useState<string | null>(null);
+  const [selectedYear, setSelectedYear] = useState<number | null>(null);
 
   const handleWheelRotate = (isRotating: boolean, era?: string) => {
     setBlurEffect(isRotating);
@@ -19,12 +25,14 @@ export default function Home() {
     }
   };
 
+  const numColumns = 12;
+  const columnWidth = 100 / numColumns;
+
   return (
     <div
       className="h-screen w-full bg-cover bg-center bg-no-repeat flex flex-col items-center relative overflow-hidden"
       style={{ backgroundImage: "url('/background.svg')" }}
     >
-      {/* Full Page Blur & Transition */}
       <AnimatePresence>
         {blurEffect && (
           <motion.div
@@ -46,13 +54,9 @@ export default function Home() {
         )}
       </AnimatePresence>
 
-      {/* Title */}
-      <h1 className="text-[#3a2b24] text-5xl font-medium font-serif mt-3 mb-2">
-        WHEEL OF TIME
-      </h1>
+      <h1 className="text-5xl mt-2 mb-2 text-[#3d2b1f] font-bold">WHEEL OF TIME</h1>
 
-      {/* Search bar */}
-      <div className="w-3/4 max-w-[600px] relative mb-2">
+      <div className="w-3/4 max-w-[700px] relative mb-2">
         <div
           className="w-full relative flex items-center"
           style={{
@@ -73,71 +77,60 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Map container */}
       <div
-        className="w-2/3 border-2 border-[#724f27] items-center rounded-3xl mb-28"
-        style={{ height: "calc(100vh - 280px)" }}
+        className="w-full flex justify-center items-center mt-2"
+        style={{ height: "calc(100vh - 280px)", maxWidth: "90vw" }}
       >
-        <WorldMap />
+        <WorldMap onSelectCountry={setSelectedLocation} />
       </div>
 
-      {/* Character */}
-      <div className="absolute top-5 right-5 h-40 w-32">
-        <Image
-          src="/person.png"
-          alt="Character"
-          width={150}
-          height={200}
-          className="object-contain"
-        />
-      </div>
-
-      {/* Bottom */}
-      <div className="absolute bottom-[-6] w-full px-16 flex justify-center items-center">
+      <div className="absolute bottom-0 w-full px-16 flex justify-center items-center">
         <div className="flex w-full justify-between items-center gap-4">
-          <Select>
-            <option hidden>All Genres</option>
-            <option>War</option>
-            <option>Art</option>
-            <option>Science</option>
-            <option>Diseases</option>
-          </Select>
-
-          <Select>
-            <option hidden>All Years</option>
-            <option>Ancient</option>
-            <option>Medieval</option>
-            <option>1800s</option>
-            <option>1900s</option>
-            <option>2000s</option>
-          </Select>
-
-          <div className="relative z-10">
-            <RotatableWheel onRotate={handleWheelRotate} />
+          <ThemeSelector onSelect={(theme: string) => setSelectedTheme(theme)} />
+          <YearSelector onSelect={(year: number) => setSelectedYear(year)} />
+          <RotatableWheel onRotate={handleWheelRotate} />
+          <LocationSelector onSelect={setSelectedLocation} />
+          
+          <div 
+            className="relative w-40 h-40 cursor-pointer overflow-hidden"
+            onClick={() => setIsPopupOpen(true)}
+          >
+            <div className="relative w-full h-full">
+              {Array.from({ length: numColumns }).map((_, index) => (
+                <motion.div
+                  key={index}
+                  className="absolute top-0 h-full"
+                  style={{
+                    left: `${index * columnWidth}%`,
+                    width: `${columnWidth}%`,
+                    backgroundImage: "url('/mag_glass.png')",
+                    backgroundSize: `${numColumns * 100}% 100%`,
+                    backgroundPosition: `${-index * 100}% 0%`,
+                    zIndex: 10,
+                  }}
+                  animate={{
+                    y: [
+                      0, 
+                      Math.sin((index / numColumns) * Math.PI) * 5,
+                      0
+                    ]
+                  }}
+                  transition={{
+                    repeat: Infinity,
+                    duration: 2,
+                    delay: index * 0.1,
+                    ease: "easeInOut"
+                  }}
+                />
+              ))}
+              
+              <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-12 h-2 bg-black opacity-30 rounded-full blur-sm"></div>
+            </div>
           </div>
-
-          <Select>
-            <option hidden>Global</option>
-            <option>Europe</option>
-            <option>Asia</option>
-            <option>Africa</option>
-            <option>Americas</option>
-            <option>Oceania</option>
-          </Select>
-
-          <Button onClick={() => setIsPopupOpen(true)}>Find Events</Button>
         </div>
       </div>
 
-      {/* Dialog popup */}
-      <Dialog open={isPopupOpen} onOpenChange={setIsPopupOpen}>
-        <div>
-          <h2>Historical Events</h2>
-          <p>
-            Select a location on the map or refine your search using filters.
-          </p>
-        </div>
-      </Dialog>
+      <EventsDialog open={isPopupOpen} onOpenChange={setIsPopupOpen} />
     </div>
   );
 }

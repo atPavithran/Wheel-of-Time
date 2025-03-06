@@ -1,11 +1,17 @@
+@import url('https://fonts.googleapis.com/css2?family=Jacques+Francois&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+body {
+  font-family: "Jacques Francois", serif;
+}
+
 .sm_state {
   cursor: pointer;
-  stroke: #70593a;
-  stroke-width: 0.5;
+  stroke: #3d2b1f;
+  stroke-width: 2;
   fill: #ffe9c9;
   transition: fill 0.3s ease;
 }
@@ -23,7 +29,6 @@
   color: white;
   padding: 0.75rem;
   border-radius: 0.375rem;
-  font-family: "Times New Roman", serif;
 }
 
 .map-overlay {

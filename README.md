@@ -55,7 +55,7 @@ This project will revolutionize how history is taught and learned by making it:
 ## How to Run the Project
 1. Clone the repository:
    ```bash
-   git clone https://github.com/your-repo/wheel-of-time.git
+   git clone https://github.com/atPavithran/Wheel-of-Time.git
    cd wheel-of-time
    ```
 2. Install dependencies:

@@ -1,51 +1,134 @@
-import React from "react";
+"use client";
+
+import React, { useEffect, useState } from "react";
+import { useSearchParams, useRouter } from "next/navigation"; // ✅ Import useRouter
+import { Volume2, Pause } from "lucide-react";
 
 const EventPage: React.FC = () => {
+  const searchParams = useSearchParams();
+  const router = useRouter(); // ✅ Initialize router
+  const eventTitle = searchParams.get("title") || "Unknown Event";
+
+  const [eventContent, setEventContent] = useState("Loading event details...");
+  const [eventImage, setEventImage] = useState("/placeholder.jpg");
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [audio, setAudio] = useState<HTMLAudioElement | null>(null);
+
+  useEffect(() => {
+    if (eventTitle !== "Unknown Event") {
+      fetchEventData(eventTitle);
+    }
+  }, [eventTitle]);
+
+  const fetchEventData = async (title: string) => {
+    try {
+      const textResponse = await fetch(`http://localhost:8000/eventinfo?question=${encodeURIComponent(title)}`);
+      const textData = await textResponse.json();
+      setEventContent(textData.response || "No details available.");
+
+      const imageResponse = await fetch(`http://localhost:8000/get_event_image?event_name=${encodeURIComponent(title)}`);
+      const imageData = await imageResponse.json();
+      setEventImage(imageData.image_url || "/placeholder.jpg");
+    } catch (error) {
+      console.error("Error fetching event data:", error);
+    }
+  };
+
+  const handleTextToSpeech = async () => {
+    if (isPlaying && audio) {
+      audio.pause();
+      setIsPlaying(false);
+      return;
+    }
+
+    try {
+      const response = await fetch(`http://localhost:8000/tts?text=${encodeURIComponent(eventTitle + ". " + eventContent)}`);
+      if (!response.ok) throw new Error("Failed to fetch speech");
+
+      const audioBlob = await response.blob();
+      const audioUrl = URL.createObjectURL(audioBlob);
+      const newAudio = new Audio(audioUrl);
+
+      newAudio.onended = () => setIsPlaying(false);
+      setAudio(newAudio);
+      setIsPlaying(true);
+      newAudio.play();
+    } catch (error) {
+      console.error("Error fetching speech:", error);
+    }
+  };
+
   return (
-    <div
-      className="flex justify-center items-center min-h-screen bg-fixed bg-center bg-contain"
-      style={{ backgroundImage: "url('/event-bg.jpg')" } as React.CSSProperties} // Typed CSS properties
+    <div className="flex justify-center items-center min-h-screen bg-fixed bg-center bg-contain p-6"
+      style={{ backgroundImage: "url('/event-bg.jpg')" } as React.CSSProperties}
     >
-      {/* Main Content Box */}
-      <div className="flex max-w-5xl w-[90%] items-center space-x-10">
+      <div className="flex w-full flex-col md:flex-row items-center justify-center md:space-x-10 px-4">
         
-        {/* Framed Image */}
-        <div className="w-[300px] h-[420px]">
+        {/* ✅ Event Image */}
+        <div className="w-[400px] h-[450px] md:w-[350px] md:h-[450px] lg:w-[400px] lg:h-[500px] mb-6 md:mb-0">
           <img 
-            src="/event-image.jpg" 
-            alt="Historical Event" 
-            className="w-full h-full object-cover rounded-md"
+            src={eventImage} 
+            alt={eventTitle} 
+            className="w-full h-full object-cover rounded-md shadow-lg"
           />
         </div>
 
-        {/* Event Text */}
-        {/* <div className="max-w-lg text-[#2D1E17] font-[Jacques Francois] leading-relaxed pl-10"> */}
-        <div
-          className="relative p-6 min-w-[500px] h-[350px] flex-col max-w-lg text-[#2D1E17] leading-relaxed pl-10"
+        {/* ✅ Event Details */}
+        <div 
+          className="relative p-6 w-full h-[600px] md:w-[500px] lg:w-[900px] flex-col max-w-3xl text-gray-800 leading-relaxed"
           style={{
             backgroundColor: "transparent",
             borderImageSource: "url('/wooden-frame.png')",
             borderImageSlice: "30",
             borderImageRepeat: "stretch",
-            borderWidth: "20px",
+            borderWidth: "30px",
             borderStyle: "solid",
             boxShadow: "0 12px 35px rgba(0, 0, 0, 0.4)",
-            backdropFilter: "blur(2px)",
+            backdropFilter: "blur(3px)",
             borderRadius: "12px",
+            overflow: "hidden",
             display: "flex",
-            justifyContent: "space-between",
-            paddingBottom: "10px",
+            justifyContent: "center",
+            height: "auto",
+            maxHeight: "450px",
           } as React.CSSProperties}
         >
-          <h2 className="text-4xl font-bold mb-4">World War II</h2>
-          <p className="text-lg">
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Etiam euismod id sem quis accumsan. 
-            Sed tempus placerat velit a placerat. Cras suscipit est at mauris blandit efficitur finibus non augue. 
-            Sed tempus placerat velit a placerat.
-          </p>
-        </div>
+          <div className="flex justify-between items-center mb-2">
+            <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-[#3d2b1f]">{eventTitle}</h2>
+            <button 
+              onClick={handleTextToSpeech}
+              className="flex items-center justify-center w-12 h-12 rounded-full bg-amber-700 hover:bg-amber-600 text-white transition-colors"
+              aria-label={isPlaying ? "Pause audio" : "Play audio"}
+              title={isPlaying ? "Stop reading" : "Read aloud"}
+            >
+              {isPlaying ? <Pause size={20} /> : <Volume2 size={20} />}
+            </button>
+          </div>
 
+          {/* ✅ Text Container */}
+          <p className="text-base md:text-lg text-[#5d4c2e] overflow-auto max-h-[400px] px-3"
+            style={{ textAlign: "justify", lineHeight: "1.5" }}>
+            {eventContent}
+          </p>
+
+          {isPlaying && (
+            <div className="absolute bottom-2 right-6">
+              <div className="text-xs text-amber-700 animate-pulse">Reading aloud...</div>
+            </div>
+          )}
+        </div>
       </div>
+
+      {/* ✅ Button to Chatbot */}
+      <div className="absolute bottom-6 right-6">
+        <button 
+          onClick={() => router.push("/chatbot")} 
+          className="px-5 py-3 bg-blue-700 text-white rounded-lg shadow-md hover:bg-blue-800 transition duration-200"
+        >
+          Go to Chatbot
+        </button>
+      </div>
+
     </div>
   );
 };

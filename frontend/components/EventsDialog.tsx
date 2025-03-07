@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { useRouter } from "next/navigation"; // ✅ Import router correctly at the top
 import { Dialog } from "@/components/ui";
 import { X } from "lucide-react";
 
@@ -13,6 +14,8 @@ export default function EventsDialog({
   onOpenChange: (open: boolean) => void;
   events?: any[];
 }) {
+  const router = useRouter(); // ✅ Initialize router here
+
   const eventList = Array.isArray(events) ? events : [];
 
   return (
@@ -38,7 +41,13 @@ export default function EventsDialog({
                   <li key={index} className="py-4">
                     <div className="flex justify-between items-start">
                       <div>
-                        <h3 className="text-2xl font-bold text-[#3d2b1f]">{event.title || "Unknown Event"}</h3>
+                        {/* ✅ Clicking the title now navigates to EventPage.tsx */}
+                        <button
+                          onClick={() => router.push(`/event?title=${encodeURIComponent(event.title)}`)}
+                          className="text-2xl font-bold text-[#3d2b1f] hover:text-[#6a4f34] transition-colors"
+                        >
+                          {event.title || "Unknown Event"}
+                        </button>
                         <p className="italic text-[#5d4c2e] mt-1">{event.description || "No description available."}</p>
                       </div>
                       <div className="text-right">

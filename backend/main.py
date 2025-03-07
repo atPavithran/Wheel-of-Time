@@ -9,6 +9,15 @@ from dotenv import load_dotenv
 import faiss
 import numpy as np
 from sentence_transformers import SentenceTransformer
+from gtts import gTTS
+from io import BytesIO
+from fastapi import Query
+from fastapi.responses import StreamingResponse
+import json
+
+from fastapi.middleware.cors import CORSMiddleware
+
+
 import wikipediaapi
 
 # Load environment variables
@@ -19,10 +28,41 @@ app = FastAPI(title="Historical Events Finder API",
               description="Fetch historical events using Gemini AI and event images using DuckDuckGo",
               version="2.0.0")
 
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Change to frontend URL for security, e.g., ["http://localhost:3000"]
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 # Configure Gemini API (API key from .env file)
 genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
 
-def ask_gemini(question: str) -> str:
+def ask_gemini(question: str) -> list:
+    """Fetches structured response from Google Gemini API and extracts JSON correctly."""
+    try:
+        model = genai.GenerativeModel("gemini-1.5-pro")
+        response = model.generate_content(question)
+
+        print("\n📢 Gemini API Raw Response:", response.text)  # ✅ Debugging print
+
+        # ✅ Extract JSON block using regex
+        match = re.search(r'```json\n(.*?)\n```', response.text, re.DOTALL)
+
+        if match:
+            json_text = match.group(1)  # Extract the JSON part
+            events_list = json.loads(json_text)  # Convert JSON text to Python list
+            return events_list
+
+        print("\n⚠️ No valid JSON found in response.")
+        return []  # Return empty list if no JSON found
+
+    except Exception as e:
+        print("\n❌ Error in Gemini API call:", str(e))
+        return []
+
+def ask_gemini2(question: str) -> str:
     """Fetches response from Google Gemini API."""
     try:
         model = genai.GenerativeModel("gemini-1.5-pro")
@@ -149,17 +189,30 @@ def generate_event_text(event_name: str):
 
 @app.get("/historical-events")
 def get_historical_events(place: str = None, year: str = None, theme: str = None):
-    # prompt = f"List major historical events that happened in {place or 'the world'} in the year {year or 'any year'} in the theme{theme or 'all genres'}. Give me 5 different incidents with one line summary along with the theme(diseases,science,art,war), place, era and year."
-    prompt =f'''Place : {place}, year : {year}, theme : {theme}. List major historical events in any combination of these 3 parameters received either year/place/date or any 2 or all 3. Give 5 major events with one line summary. It shld be structured as 
-    EVENT NAME:Name of the event
-    PLACE:Where it happened 
-    YEAR:When it happened 
-    EVENT:The event that happened
-    THEME: one of thse themes (diseases,science,art,war)
-    ERA: ERA of when the event happened'''
+    prompt = f'''Place: {place}, Year: {year}, Theme: {theme}.
+    List 5 major historical events in this combination.
+
+    FORMAT:
+    ```json
+    [
+        {{
+            "title": "Event Name",
+            "place": "Location",
+            "year": "Year",
+            "description": "Event details",
+            "category": "One of: diseases, science, art, war",
+            "era": "Era"
+        }},
+        ...
+    ]
+    ```
+    '''
 
     response = ask_gemini(prompt)
-    return {"place": place, "year": year, "events": response, "theme" : theme}
+
+    print("\n🔎 Extracted Events List:", response)  # ✅ Debug Response
+
+    return {"place": place, "year": year, "events": response, "theme": theme}
 
 # Initialize FAISS index
 try:
@@ -178,6 +231,24 @@ chunk_start_index = 0  # Track where chunks start in FAISS
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 genai.configure(api_key=GEMINI_API_KEY)
 
+@app.get("/chatbot")
+async def get_chatbot_response(question: str):
+    """API endpoint to fetch history-related responses."""
+    prompt = (
+        "You are a historian. Whatever question the user asks, give a short response up to 100 words."
+        "If the question is completely unrelated to history, respond with an appropriate denial. "
+        f"This is the Question: {question}"
+    )
+    res = ask_gemini2(prompt)
+    return {"response": res}
+
+@app.get("/eventinfo")
+async def info(question:str):
+    prompt = (
+        f"Give me a short paragraph in about 60 words on the topic{question}"
+    )
+    res = ask_gemini2(prompt)
+    return {"response": res}
 
 @app.post("/add_event/")
 def add_event_to_faiss(event_name: str):
@@ -270,3 +341,19 @@ def generate_summary(retrieved_chunks):
     response = model.generate_content(prompt)
 
     return {"summary": response.text}
+
+
+
+@app.get("/tts")
+async def text_to_speech(text: str = Query(..., min_length=1)):
+    try:
+        # Convert text to speech
+        tts = gTTS(text=text, lang="en")
+        audio_buffer = BytesIO()
+        tts.write_to_fp(audio_buffer)
+        audio_buffer.seek(0)
+
+        # Return audio as streaming response
+        return StreamingResponse(audio_buffer, media_type="audio/mpeg")
+    except Exception as e:
+        return {"error": str(e)}
